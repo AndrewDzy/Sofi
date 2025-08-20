@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Happy Birthday — Neon Pixel Show</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Caveat&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg1: #0a0011; --bg2: #22002e; --pink: #ff66cc; --violet: #a066ff; --cyan: #66f7ff;
+    }
+    *{ box-sizing: border-box }
+    html, body {
+      margin: 0; height: 100%; overflow: hidden;
+      background: radial-gradient(1200px 800px at 50% 50%, var(--bg2), var(--bg1) 60%, #000 100%);
+      animation: bg-pan 12s linear infinite;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial;
+    }
+    canvas { 
+      position: fixed; 
+      inset: 0; 
+      z-index: 1; 
+      display: block;
+      cursor: pointer; /* Add cursor to show it's clickable */
+    }
+
+    .postcard-wrap { 
+      position: fixed; inset: 0; display: none; place-items: center; z-index: 3; 
+    }
+    .postcard-wrap.active { 
+      display: grid;
+      animation: card-enter 1s cubic-bezier(.22, 1, .36, 1) forwards;
+    }
+    .book {
+      width: min(86vw, 760px); height: min(56vw, 480px);
+      perspective: 1800px; transition: transform 0.3s ease;
+      animation: float-card 6s ease-in-out infinite;
+    }
+    .book:hover { transform: scale(1.03); }
+    .book-inner {
+      position: relative; width: 100%; height: 100%;
+      transform-style: preserve-3d;
+      transition: transform 1.2s cubic-bezier(.22, 1, .36, 1);
+    }
+    .book.flipped .book-inner { transform: rotateY(-180deg); }
+    .page {
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, .02));
+      border: 1px solid rgba(255, 255, 255, .25); backdrop-filter: blur(12px); border-radius: 22px;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, .5), 0 0 50px rgba(255, 102, 204, .35), inset 0 0 2px rgba(255,255,255,0.3);
+      display: flex; align-items: center; justify-content: center; flex-direction: column; padding: 1rem;
+      backface-visibility: hidden;
+    }
+    .front { transform: rotateY(0deg); }
+    .back { transform: rotateY(-180deg); }
+
+    .page h1 {
+      font-family: 'Pacifico', cursive; margin: .2rem 0 .6rem; font-weight: 500;
+      font-size: clamp(28px, 4.5vw, 52px); letter-spacing: .02em; color: #fff;
+      text-align: center;
+      text-shadow: 0 0 18px rgba(255, 255, 255, .7), 0 0 34px var(--violet);
+    }
+    .page p { margin: 0; color: #fff; opacity: .95; font-size: clamp(16px, 2.2vw, 22px); text-align: center; }
+    .photo { max-width: 100%; max-height: 60%; border-radius: 16px; box-shadow: 0 10px 40px rgba(0, 0, 0, .55), 0 0 30px rgba(255, 102, 204, .25); margin-bottom: 14px; object-fit: cover; }
+    .hint { position: absolute; bottom: -38px; left: 50%; transform: translateX(-50%); font-size: 14px; color: #fff8; letter-spacing: .08em; }
+    
+    .signature { width: 60%; margin-top: 1rem; }
+    .signature path {
+        stroke: white; stroke-width: 3; fill: none;
+        stroke-dasharray: 1000; stroke-dashoffset: 1000;
+    }
+    .book.flipped .signature path { animation: draw 3s ease-in-out 0.5s forwards; }
+    
+    .love {
+      position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); z-index: 2; color: #fff;
+      font-weight: 600; letter-spacing: .12em; text-shadow: 0 0 10px rgba(255, 102, 204, .8), 0 0 20px rgba(160, 102, 255, .7);
+      opacity: 0; animation: fade-in-love 2s 1s forwards;
+    }
+
+    /* ✨ New "Tap to continue" prompt ✨ */
+    .prompt {
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 2;
+      color: rgba(255,255,255,0.7);
+      font-size: 14px;
+      letter-spacing: 0.1em;
+      opacity: 0;
+      animation: fade-in-love 2s 1s forwards;
+    }
+    
+    @keyframes bg-pan { 0% { background-position: 50% 50%; } 50% { background-position: 60% 40%; } 100% { background-position: 50% 50%; } }
+    @keyframes float-card { 0% { transform: translateY(0px) rotateZ(0deg); } 50% { transform: translateY(-12px) rotateZ(1.5deg); } 100% { transform: translateY(0px) rotateZ(0deg); } }
+    @keyframes fade-in-love { to { opacity: 0.7; } }
+    @keyframes draw { to { stroke-dashoffset: 0; } }
+    @keyframes card-enter { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+
+    @media (max-width: 768px) and (orientation: portrait) {
+      .book {
+        width: 90vw; height: 70vh; max-height: 600px; animation: none;
+      }
+      .page h1 { font-size: clamp(22px, 6vw, 36px); }
+      .page p { font-size: clamp(14px, 3.5vw, 16px); line-height: 1.5; }
+      .photo { max-height: 55%; object-fit: contain; }
+      .love { font-size: 10px; bottom: 10px; }
+      .hint { bottom: 1.5rem; font-size: 12px; }
+    }
+
+    @media (max-width: 900px) and (max-height: 500px) and (orientation: landscape) {
+      .book {
+        height: 85vh; aspect-ratio: 86 / 56; width: auto; animation: none;
+      }
+      .page {
+        flex-direction: row; align-items: center; justify-content: space-around; gap: 1rem; padding: 1rem;
+      }
+      .photo { max-width: 45%; max-height: 90%; margin-bottom: 0; }
+      .page > div { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 50%; }
+      .page h1 { font-size: clamp(18px, 4.5vh, 32px); }
+      .page p { font-size: clamp(12px, 2.5vh, 16px); }
+      .love { font-size: 10px; bottom: 5px; }
+      .hint {
+        bottom: 1rem; font-size: 10px; background: rgba(0,0,0,0.2); padding: 2px 8px; border-radius: 5px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="fx"></canvas>
+  
+  <div class="prompt" id="prompt">Tap to continue</div>
+
+  <div class="postcard-wrap" id="postcard">
+    <div class="book" id="book">
+      <div class="book-inner">
+        <div class="page front">
+          <img class="photo" src="photo_2025-08-18_23-54-17.jpg" alt="Photo 1" />
+          <div>
+            <h1>Happy Birthday найкраща</h1>
+            <p>🎊Ти каралева, бажаю тобі всьо всьо чого ти хочеш і щоб воно ісполнялось🎊</p>
+          </div>
+          <span class="hint">tap to flip ↺</span>
+        </div>
+        <div class="page back">
+          <img class="photo" src="photo_2025-08-08_19-29-10.jpg" alt="Photo 2" />
+          <div>
+            <h1>Моя любімка ❤️</h1>
+            <p>Ти саме найкраще що могло бути в моєму житті.</p>
+            <p>Щоб ти завжди посміхалась а інше проходило мимо.</p>
+          </div>
+          <svg class="signature" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 100">
+            <path d="M10 50 Q 50 10, 90 50 T 170 50 C 190 20, 220 20, 240 50 Q 260 80, 290 50 T 370 50" />
+          </svg>
+          <span class="hint">tap to flip ↻</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="love">Любімачка • Сама найкраща • Дуже сільно люблю • ❤️</div>
+
+<script>
+const CONFIG = {
+  messages: [
+    "🎉Сонечко з твоїм днем🎉",
+    "Хочу щоб ти завжди була",
+    "💕такою яка ти є 💕",
+    "сільна тібя люблю",
+    "❤️",
+    ""
+  ],
+  fontFamily: '900 180px "Poppins", system-ui',
+  // holdTime is no longer needed
+  dotStep: 5,
+  assembleEase: 0.06,
+  damping: 0.86,
+  trailFade: 0.16,
+  explosionTime: 800, // Slightly longer explosion animation
+  dotSize: 2.2, glowStrength: 1.2,
+  neonCycle: true, sparkleCount: 40
+};
+
+// --- PARTICLE ANIMATION LOGIC ---
+const canvas = document.getElementById('fx'); const ctx = canvas.getContext('2d');
+const promptEl = document.getElementById('prompt');
+let W, H, PR; function resize() { PR = Math.min(window.devicePixelRatio || 1, 2); W = canvas.width = Math.floor(innerWidth * PR); H = canvas.height = Math.floor(innerHeight * PR); canvas.style.width = innerWidth + 'px'; canvas.style.height = innerHeight + 'px'; }
+addEventListener('resize', resize); resize();
+const tcan = document.createElement('canvas'); const tctx = tcan.getContext('2d');
+
+function sampleTextPoints(text) {
+  promptEl.style.opacity = '1';
+  tcan.width = W; tcan.height = H;
+  tctx.clearRect(0, 0, W, H);
+  tctx.textAlign = 'center';
+  tctx.textBaseline = 'middle';
+  tctx.fillStyle = '#fff';
+
+  let fontSize;
+  if (W > H) { fontSize = H * 0.3; } else { fontSize = W * 0.2; }
+  tctx.font = CONFIG.fontFamily.replace('180', String(Math.floor(fontSize)));
+
+  while ((tctx.measureText(text).width > W * 0.9 || fontSize > H * 0.9) && fontSize > 10) {
+    fontSize--;
+    tctx.font = CONFIG.fontFamily.replace('180', String(Math.floor(fontSize)));
+  }
+  
+  tctx.fillText(text, W / 2, H / 2);
+  
+  const { data, width, height } = tctx.getImageData(0, 0, W, H);
+  const pts = [];
+  const step = CONFIG.dotStep * PR;
+  for (let y = 0; y < height; y += step) {
+    for (let x = 0; x < width; x += step) {
+      const i = (x + y * width) * 4 + 3;
+      if (data[i] > 128) pts.push({ x, y });
+    }
+  }
+  return pts;
+}
+class Sparkle { constructor() { this.x = Math.random() * W; this.y = Math.random() * H; this.size = Math.random() * 1.2 * PR; this.life = Math.random() * 200; this.maxLife = 200; this.vx = (Math.random() - 0.5) * 0.2; this.vy = (Math.random() - 0.5) * 0.2; this.h = 280 + Math.random() * 50; } update(dt) { this.life += dt; if (this.life > this.maxLife) { this.life = 0; this.x = Math.random() * W; this.y = Math.random() * H; } this.x += this.vx * dt; this.y += this.vy * dt; } render() { const opacity = 0.8 * Math.sin(Math.PI * (this.life / this.maxLife)); ctx.fillStyle = `hsla(${this.h}, 100%, 80%, ${opacity})`; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill(); } }
+class Dot { constructor() { this.x = Math.random() * W; this.y = Math.random() * H; this.vx = 0; this.vy = 0; this.tx = this.x; this.ty = this.y; this.life = 0; this.h = Math.random() * 360; this.l = 68; this.size = CONFIG.dotSize * PR; } update(dt) { const dx = this.tx - this.x, dy = this.ty - this.y; this.vx += dx * CONFIG.assembleEase * dt; this.vy += dy * CONFIG.assembleEase * dt; this.vx *= CONFIG.damping; this.vy *= CONFIG.damping; this.x += this.vx; this.y += this.vy; if (CONFIG.neonCycle) this.h = (this.h + 0.25 * dt) % 360; this.life += dt; } render() { const g = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size * 6); g.addColorStop(0, `hsla(${this.h},100%,${this.l}%,${0.9 * CONFIG.glowStrength})`); g.addColorStop(1, `hsla(${this.h},100%,${this.l}%,0)`); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill(); } }
+let dots = []; let targets = []; let phase = 'assemble'; let msgIndex = 0; let phaseTimer = 0; let last = performance.now(); let sparkles = Array.from({ length: CONFIG.sparkleCount }, () => new Sparkle());
+function setMessage(text) { targets = sampleTextPoints(text); const need = targets.length; if (dots.length < need) { for (let i = dots.length; i < need; i++) dots.push(new Dot()); } else if (dots.length > need) { dots.length = need; } for (let i = 0; i < need; i++) { const d = dots[i]; const t = targets[i]; d.tx = t.x; d.ty = t.y; } phase = 'assemble'; phaseTimer = 0; }
+function explode() {
+  promptEl.style.opacity = '0'; // Hide prompt during explosion
+  phase = 'explode';
+  phaseTimer = 0;
+  const cx = W / 2, cy = H / 2;
+  for (const p of dots) {
+    const ang = Math.atan2(p.y - cy, p.x - cx) + (Math.random() * 0.6 - 0.3);
+    const speed = (2 + Math.random() * 6) * PR;
+    p.vx = Math.cos(ang) * speed;
+    p.vy = Math.sin(ang) * speed;
+    if (Math.random() < 0.08) {
+      const s = new Dot(); s.x = p.x; s.y = p.y; s.tx = p.x + Math.cos(ang) * (40 + Math.random() * 80); s.ty = p.y + Math.sin(ang) * (40 + Math.random() * 80); s.vx = s.vx * 1.2; s.vy = s.vy * 1.2; s.size = s.size * 0.9; s.h = p.h + 30; dots.push(s);
+    }
+  }
+}
+function next() {
+  if (msgIndex >= CONFIG.messages.length) {
+    document.getElementById('postcard').classList.add('active');
+    promptEl.style.display = 'none'; // Permanently hide prompt
+    return;
+  }
+  setMessage(CONFIG.messages[msgIndex++]);
+}
+
+function loop(now) {
+  const dt = Math.min(2, (now - last) / 16.6667);
+  last = now;
+
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.fillStyle = `rgba(0,0,0,${CONFIG.trailFade})`;
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.globalCompositeOperation = 'lighter';
+  for(const s of sparkles) { s.update(dt); s.render(); }
+  for (const p of dots) { p.update(dt); p.render(); }
+
+  // Timer is now only used for the explosion part of the animation
+  phaseTimer += 16.6 * dt;
+  if (phase === 'explode') {
+    if (phaseTimer > CONFIG.explosionTime) {
+      dots.length = targets.length;
+      next();
+    }
+  }
+  requestAnimationFrame(loop);
+}
+
+// ✨ New Click Trigger Logic ✨
+canvas.addEventListener('click', () => {
+  if (phase === 'assemble') {
+    explode();
+  }
+});
+
+next();
+requestAnimationFrame(loop);
+
+const book = document.getElementById('book');
+book?.addEventListener('click', () => book.classList.toggle('flipped'));
+</script>
+</body>
+</html>
